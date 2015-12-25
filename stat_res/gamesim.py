@@ -1,9 +1,6 @@
 from random import uniform
 import cts.tournament.result as result
 
-DEF_MU = 2500
-DEF_SIGMA = 100
-
 class gamesim:
     def __init__(self):
         self.k_factor = 8
@@ -40,33 +37,15 @@ class gamesim:
 
     def DrawProbability(self, r_a, r_b):
         """provides a simple model for the probability of a draw between two players of ratings r_a and r_b"""
-        
-        r_ceiling = 2750
-        r_floor = 1400
-        draw_percentage_ceiling = .65
-        draw_percentage_floor = .2
-        draw_percentage_floor_x = 300.0
-        draw_probability_floor = .02
-        ddp_drm = (draw_percentage_ceiling - draw_percentage_floor)/(r_ceiling - r_floor)
-        di_i = r_ceiling - r_ceiling * ddp_drm
-        r_mean = (float(r_a)+float(r_b))/2
-        r_diff = abs(float(r_a-r_b))
-        
-        if r_mean > r_ceiling:
-            draw_intercept = draw_percentage_ceiling
-        elif r_mean < r_floor:
-            draw_intercept = draw_percentage_floor
-        else:
-            draw_intercept = r_mean * ddp_drm - di_i
-        
-        d_y = draw_percentage_floor - draw_intercept
-        d_x = draw_percentage_floor_x
-        dy_dx = d_y / d_x
-        
-        draw_probability = r_diff * dy_dx + draw_intercept
+
+        draw_probability_ceiling = .5
+        draw_probability_floor = .01
+        draw_probability = draw_probability_ceiling -.001 * abs(r_a-r_b)
         
         if draw_probability < draw_probability_floor:
             draw_probability = draw_probability_floor
+        if draw_probability > draw_probability_ceiling:
+            draw_probability = draw_probability_ceiling
         
         return draw_probability
     

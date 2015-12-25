@@ -1,12 +1,15 @@
 from cts.options.header import *
+import cts.application.menudriver
 import menu
 
 class stackable:
-    def __init__(self, menu_tree, name = ""):
+    def __init__(self, menu_list, name = ""):
         self.name = name
-        self.menu_tree = menu_tree
+        self.menu_list = menu_list
         
-        self.menu = menu.menu(self.menu_tree, self.name)
+        self.header = ""
+        
+        self.menu = cts.application.menudriver.menudriver(self.name, self.menu_list)
         self.is_exit = 0
         
     def IsExit(self):
@@ -24,6 +27,8 @@ class stackable:
         game_stack.Append(to_stack)
         
     def Loop(self):
-        DisplayTable(self.menu.ToStringTable())
+        if self.header:
+            Display(self.header)
+        DisplayStringTable(self.menu.GetStringTable())
         inp = raw_input()
-        self.menu.ChooseOption(inp)
+        self.menu.Select(inp)

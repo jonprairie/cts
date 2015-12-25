@@ -1,7 +1,8 @@
+import cts.application.selectablestringtable
 keys = "abcdefghijklmnopqrstuvwxyz1234567890"
 
-class menuelement:
-    def __init__(self, name, menu_tree, action, no_back = 0):
+class menuelement(cts.application.row.row):
+    def __init__(self, name, menu_tree, action, no_back = 0, dynamic=0):
         self.name = name
 
         self.menu_tree = menu_tree
@@ -9,6 +10,8 @@ class menuelement:
         
         self.action = action
         self.is_leaf = 1
+        
+        self.dynamic = dynamic
         
         self.is_exit = 0
         

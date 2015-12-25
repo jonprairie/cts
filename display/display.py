@@ -1,6 +1,24 @@
-def DisplayTable(string_table, horizontal_padding = 3):
-    """Takes a table of strings and displays it"""
+import os
+
+def ClearScreen():
+    os.system("cls")
     
+def Pause():
+    os.system("pause")
+    
+def DisplayStringTable(string_table, pre_clear = 1, pause = 0, horizontal_padding = 3):
+    if pre_clear:
+        ClearScreen()
+
+    Display(str(string_table))
+    
+    if pause:
+        Pause()
+  
+def DisplayTable(string_table, pre_clear = 1, pause = 0, horizontal_padding = 3):
+    """Takes a table of strings and formats it, then displays it"""
+    if pre_clear:
+        ClearScreen()
     disp_str = ""
     horizontal_pad = ""
     for buff in range(horizontal_padding):
@@ -32,5 +50,8 @@ def DisplayTable(string_table, horizontal_padding = 3):
            
     Display(disp_str)
     
+    if pause:
+        Pause()
+    
 def Display(string):
-    print string
+    print str(string)

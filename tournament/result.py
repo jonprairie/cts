@@ -14,24 +14,30 @@ class result:
         return ret
         
     def WhiteResult(self):
-        white_result = 0
+        white_result = 0.0
         if self.white_win:
-            white_result = 1
+            white_result = 1.0
         elif self.draw:
             white_result = .5
         return white_result
         
     def BlackResult(self):
-        black_result = 1
+        black_result = 1.0
         if self.draw:
             black_result = .5
         elif self.white_win:
-            black_result = 0
+            black_result = 0.0
         return black_result
         
     def IsDraw(self):
         return self.draw
         
+    def ToNum(self, white):
+        if white:
+            return self.WhiteResult()
+        else:
+            return self.BlackResult()
+            
     def ToString(self):
         retstr = ""
         if self.white_win:

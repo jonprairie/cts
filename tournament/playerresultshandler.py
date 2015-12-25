@@ -11,6 +11,9 @@ class playerresultshandler:
         
         self.InitPHList(player_list)
         
+    def GetList(self):
+        return self.player_handler_list
+        
     def InitPHList(self, player_list):
         for player in player_list:
             temp = playerresults.playerresults(self.tournament, player)
@@ -73,7 +76,3 @@ class playerresultshandler:
         for rank in self.player_rankings:
             ret_table.extend(rank.ToStringTable(show_performance_rating, show_elo))
         return ret_table
-        
-        
-    
-        

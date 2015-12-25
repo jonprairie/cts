@@ -11,3 +11,4 @@ stats_model = gamesim.gamesim()
 
 Display = display.Display
 DisplayTable = display.DisplayTable
+DisplayStringTable = display.DisplayStringTable

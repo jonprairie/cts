@@ -1,11 +1,11 @@
 from cts.options.header import *
+import cts.application.row
 from clock import *
 
-class chessgame:
+class chessgame(cts.application.row.row):
     """chess game"""
 
     def __init__(self, player_w, player_b, time_control = default_options["time_control"]):
-        
         self.player_w = player_w
         self.player_b = player_b
         self.time_control = time_control
@@ -22,6 +22,8 @@ class chessgame:
         if not self.player_w:
             self.bye = 1
             self.player_on_bye = self.player_b
+            
+        cts.application.row.row.__init__(self, dict(white=self.player_w, black=self.player_b))
             
     #Get Functions        
     def GetPlayerResult(self, player):
@@ -65,10 +67,10 @@ class chessgame:
     def Play(self):
         if not self.is_finished:
             if not self.IsBye():
-                self.result = stats_model.SimulateResult(self.player_w.GetElo("telo"), self.player_b.GetElo("telo"))
-                w_adjustment, b_adjustment = stats_model.RatingAdjustment(self.player_w.GetElo("lelo"), self.player_b.GetElo("lelo"), self.result)
-                self.player_w.UpdateElo(w_adjustment)
-                self.player_b.UpdateElo(b_adjustment)
+                self.result = stats_model.SimulateResult(self.player_w.GetPlayStrength(), self.player_b.GetPlayStrength())
+                w_adjustment, b_adjustment = stats_model.RatingAdjustment(self.player_w.GetLiveElo(), self.player_b.GetLiveElo(), self.result)
+                self.player_w.UpdateLiveElo(w_adjustment)
+                self.player_b.UpdateLiveElo(b_adjustment)
             self.is_finished = 1
 
     #String Functions
@@ -80,8 +82,8 @@ class chessgame:
             bpstr = ""
             
             if show_elo:
-                wpstr += str(self.player_w.GetElo("elo")) + " "
-                bpstr += str(self.player_b.GetElo("elo")) + " "
+                wpstr += str(self.player_w.GetElo()) + " "
+                bpstr += str(self.player_b.GetElo()) + " "
                 
             wpstr += self.player_w.GetName()
             bpstr += self.player_b.GetName()

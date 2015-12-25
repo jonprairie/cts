@@ -17,12 +17,15 @@ class menu:
             if temp_element.IsLeaf():
                 temp_element.Action()
             elif temp_element.HasChildren():
-                self.menu_stack.append(temp_element)
-                self.UpdateCurrentElement(1)
+                self.ClimbTree(temp_element)
             
             if self.current_element.IsExit():
                 self.current_element.ResetExit()
                 self.Back()
+                
+    def ClimbTree(self, menu_element):
+        self.menu_stack.append(menu_element)
+        self.UpdateCurrentElement(1)
         
     def UpdateCurrentElement(self, inc = 0):
         self.last_index += inc

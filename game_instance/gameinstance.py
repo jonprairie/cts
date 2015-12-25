@@ -1,65 +1,56 @@
 from cts.options.header import *
-import cts.application.stackable as stackable
+import cts.application.stackable
+import cts.application.stringtable
+import cts.application.node
 import calendarhandler
 import playerhandler
-import tournamenthandler    
+import tournamenthandler
+import federationhandler
 
-class gameinstance(stackable.stackable):
+class gameinstance(cts.application.stackable.stackable):
     """Main game level, this is where the game mechanics are implemented"""
     
     def __init__(self):
-        self.menu_list = [("back", [], self.MakeExit),
-                          ("sim day", [], self.SimDay),
-		                  ("play tournament", [], self.dummyPlayTournament),
-                          ("official player list", [], self.DisplayTopPlayers)]
-    
-        stackable.stackable.__init__(self, self.menu_list, "Main Menu")
-        
+     
+        #Init Handlers
         self.player_handler = playerhandler.playerhandler()
         self.calendar_handler = calendarhandler.calendarhandler()
         self.tournament_handler = tournamenthandler.tournamenthandler()
-
-        self.InitGame()
+        self.federation_handler = federationhandler.federationhandler()
         
-    def InitGame(self):
+        #Link Handlers Together
+        self.player_handler.LinkHandlers(calendar_handler = self.calendar_handler, tournament_handler = self.tournament_handler, federation_handler = self.federation_handler)
+        self.calendar_handler.LinkHandlers(player_handler = self.player_handler, tournament_handler = self.tournament_handler, federation_handler = self.federation_handler)
+        self.tournament_handler.LinkHandlers(player_handler = self.player_handler, calendar_handler = self.calendar_handler, federation_handler = self.federation_handler)
+        self.federation_handler.LinkHandlers(player_handler = self.player_handler, calendar_handler = self.calendar_handler, tournament_handler = self.tournament_handler)
+        
+        #Init Game Instance
         self.player_handler.InitPlayers()
+        self.federation_handler.RegisterPlayers()
         self.tournament_handler.GenInitialTournaments(self.calendar_handler.GetCurrentDate())
-        self.PopulateInitialTournaments()
         
-        self.DailyMaintenance()
-        self.WeeklyMaintenance()
+        self.header = self.calendar_handler.GetCurrentDate().GetDate()
+        
+        self.menu_list = self.BuildMenu()
     
-    #Maintenance Functions
-    def PopulateInitialTournaments(self):
-        """Populates the tournaments that are initialized at the start of a new game"""
-        
-        self.PopulateTournaments()
-    
-    def PopulateTournaments(self):
-        """Sends invites to players from 'Invitational' (non-open) tournaments.
-        Then registers players for open tournaments."""
-        
-        self.tournament_handler.SendInvites(self.player_handler.GetPlayers())
-        self.player_handler.RegisterForTournaments(self.tournament_handler.GetNewTournaments())
-
-    def MonthlyMaintenance(self):
-        pass
-        
-    def WeeklyMaintenance(self):
-        pass
-        
-    def DailyMaintenance(self):
-        #Tournament Handler Maintenance
-        current_date = self.calendar_handler.GetCurrentDate()
-        self.tournament_handler.NewTournamentMaintenance(current_date)
-        transfers = self.tournament_handler.WaitingTournamentMaintenance(current_date)
-        self.tournament_handler.CurrentTournamentMaintenance()
-        for t in transfers:
-            t_range = t.GetNumRounds()
-            self.calendar_handler.AddTournamentToRange(t, t_range)
+        cts.application.stackable.stackable.__init__(self, self.menu_list, "Main Menu")
+           
 
     #Player Interface/Menu Functions
+    def BuildMenu(self):
+        ev1 = cts.application.node.exteriornode("back", self.MakeExit)
+        ev2 = cts.application.node.exteriornode("sim day", self.SimDay)
+        ev3 = cts.application.node.exteriornode("play tournament", self.dummyPlayTournament)
+        ev4 = cts.application.node.exteriornode("official player list", self.DisplayTopPlayers)
+        in1 = cts.application.node.interiornode("future tournaments", self.tournament_handler.GetWaitingTournaments(), dynamic=1, children_func=self.tournament_handler.GetWaitingTournaments)
+        in2 = cts.application.node.interiornode("current tournaments", self.tournament_handler.GetCurrentTournaments(), dynamic=1, children_func=self.tournament_handler.GetCurrentTournaments)
+        in3 = cts.application.node.interiornode("tournaments", [in1, in2])
+        ev5 = cts.application.node.exteriornode("display tournaments", self.DisplayTournaments)
+        return [ev1,ev2,ev3,ev4,ev5,in3]
+        
     def SimDay(self):
+        """Simulates current day"""
+        
         current_date = self.calendar_handler.GetCurrentDate()
         current_tournaments = current_date.GetTournaments()
         
@@ -67,25 +58,39 @@ class gameinstance(stackable.stackable):
             t.PlayCurrentRound()
             
         self.calendar_handler.IncrementDay()
-        self.DailyMaintenance()
-        if self.calendar_handler.IsWeek():
-            self.WeeklyMaintenance()
-            
+        self.header = self.calendar_handler.GetCurrentDate().GetDate()
+    
     def DisplayTopPlayers(self, num_players=50):
+        """DEPRECATED"""
         player_list = self.player_handler.GetPlayers()
         player_list.sort(cmp = playerhandler.PlayerCMP)
+
         player_table = []
-        
-        for player, num in zip(player_list, range(num_players)):
+        player_table.append(["RANK", "NAME", "ELO", "LIVE ELO"])
+        for p, num in zip(player_list, range(num_players)):
             temp_row = []
             temp_row.append(str(num+1) + ":")
-            temp_row.append(player.GetName())
-            temp_row.append(str(player.GetElo()))
-            temp_row.append(str(player.GetElo("lelo")))
+            temp_row.append(p.GetName())
+            temp_row.append(str(p.GetElo()))
+            temp_row.append(str(p.GetLiveElo()))
             player_table.append(temp_row)
         
-        DisplayTable(player_table)
- 
+        DisplayTable(player_table,pause=1)
+        
+    def DisplayTournaments(self):
+        current_tournament_list = self.tournament_handler.GetCurrentTournaments()
+        current_tournament_st = cts.application.stringtable.stringtable("current tournaments", current_tournament_list)
+        
+        future_tournament_list = self.tournament_handler.GetWaitingTournaments()
+        future_tournament_st = cts.application.stringtable.stringtable("future tournaments", future_tournament_list)
+
+        new_tournament_list = self.tournament_handler.GetNewTournaments()
+        new_tournament_st = cts.application.stringtable.stringtable("new tournaments", new_tournament_list)        
+        
+        DisplayStringTable(current_tournament_st)
+        DisplayStringTable(future_tournament_st, pre_clear = 0)
+        DisplayStringTable(new_tournament_st, pre_clear=0, pause=1)
+               
     def dummyPlayTournament(self):
         for t in self.tournament_handler.GetCurrentTournaments():
             self.PassControl(t)
